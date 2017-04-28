@@ -1,10 +1,19 @@
+---
+title: "Simple MCMC in R"
+output: html_notebook
+theme: journal
+highlight: pygments
+---
+
+### Import some libraries that we will need.
+```{r}
 library(ggplot2)
 library(grid)
 library(gridExtra)
+```
 
-###### create data, use example similar to that from George:
-###### (http://dan.iel.fm/george/current/user/model/#a-simple-mean-model)
-
+### Create some fake data.
+```{r}
 # model parameters
 N <- 50
 m <- 0.05
@@ -22,8 +31,11 @@ s <- b + m*t + alpha * exp(-(t-l)**2/2/sigma**2)
 data <- s + n
 
 # plot data
-#qplot(t, data) + geom_errorbar(aes(ymin = data - yerr, ymax = data + yerr))
+qplot(t, data) + geom_errorbar(aes(ymin = data - yerr, ymax = data + yerr))
+```
 
+### Define likelihood, prior, and posterior.
+```{r}
 # likelihood function
 log.likelihood <- function(params){
   m <- params[1]
@@ -51,19 +63,10 @@ log.prior <- function(params){
 log.posterior <- function(params){
   return(log.likelihood(params)+log.prior(params))
 }
+```
 
-# simple proposal function
-proposal <- function(params){
-
-  # probability of jump scales sizes
-  p <- c(0.05, 0.7, 0.25)
-  sizes <- c(0.1, 1.0, 10.0)
-
-  scale <- sample(sizes, size=1, prob=p, replace=TRUE)
-  q <- rnorm(length(params), mean=params, sd=jsig*scale)
-  return(q)
-}
-
+### Let's setup the proposal and simple MCMC sampler.
+```{r}
 # simple MCMC
 run.mcmc <- function(p0, N){
   chain <- array(dim=c(N+1,length(p0)))
@@ -83,7 +86,10 @@ run.mcmc <- function(p0, N){
   }
   return(chain)
 }
+```
 
+### Initialize parameters and sample!
+```{r}
 params <- c(0.01, 0.2, -0.5, 0.2, 0.2)
 jsig = c(0.1, 0.1, 0.1, 0.1, 0.1)
 print(log.likelihood(params))
@@ -93,7 +99,10 @@ proposal(params)
 # run sampler for 100000 samples
 N <- 100000
 chain <- run.mcmc(params, N)
+```
 
+### Let's make a crude triangle plot
+```{r}
 # make plots
 nparams <- length(params)
 burn <- 5000
@@ -114,3 +123,7 @@ for (ii in 1:nparams){
     }
   }
 }
+```
+
+
+
